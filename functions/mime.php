@@ -50,7 +50,7 @@ function mime_structure ($bodystructure, $flags=array()) {
     }
     if (count($flags)) {
         foreach ($flags as $flag) {
-            $char = strtoupper($flag{1});
+            $char = strtoupper($flag[1]);
             switch ($char) {
                 case 'S':
                     if (strtolower($flag) == '\\seen') {
@@ -803,7 +803,7 @@ function encodeHeader ($string) {
     $iEncStart = $enc_init = false;
     $cur_l = $iOffset = 0;
     for($i = 0; $i < $j; ++$i) {
-        switch($string{$i})
+        switch($string[$i])
         {
             case '"':
             case '=':
@@ -825,7 +825,7 @@ function encodeHeader ($string) {
                     $ret = '';
                     $iEncStart = false;
                 } else {
-                    $ret .= sprintf("=%02X",ord($string{$i}));
+                    $ret .= sprintf("=%02X",ord($string[$i]));
                 }
                 break;
             case '(':
@@ -855,7 +855,7 @@ function encodeHeader ($string) {
                 }
                 break;
             default:
-                $k = ord($string{$i});
+                $k = ord($string[$i]);
                 if ($k > 126) {
                     if ($iEncStart === false) {
                         // do not start encoding in the middle of a string, also take the rest of the word.
@@ -889,7 +889,7 @@ function encodeHeader ($string) {
                             $cur_l = 0;
                             $ret = '';
                         } else {
-                            $ret .= $string{$i};
+                            $ret .= $string[$i];
                         }
                     }
                 }
@@ -1256,12 +1256,12 @@ function sq_findnxreg($body, $offset, $reg){
     $matches = Array();
     $retarr = Array();
     preg_match("%^(.*?)($reg)%si", substr($body, $offset), $matches);
-    if (!isset($matches{0}) || !$matches{0}){
+    if (!isset($matches[0]) || !$matches[0]){
         $retarr = false;
     } else {
-        $retarr{0} = $offset + strlen($matches{1});
-        $retarr{1} = $matches{1};
-        $retarr{2} = $matches{2};
+        $retarr[0] = $offset + strlen($matches[1]);
+        $retarr[1] = $matches[1];
+        $retarr[2] = $matches[2];
     }
     return $retarr;
 }
@@ -1419,8 +1419,8 @@ function sq_getnxtag($body, $offset){
             /**
              * Yep. So we did.
              */
-            $pos += strlen($matches{1});
-            if ($matches{2} == "/>"){
+            $pos += strlen($matches[1]);
+            if ($matches[2] == "/>"){
                 $tagtype = 3;
                 $pos++;
             }
@@ -1477,7 +1477,7 @@ function sq_getnxtag($body, $offset){
                     return $retary;
                 }
             case '>':
-                $attary{$attname} = '"yes"';
+                $attary[$attname] = '"yes"';
                 return Array($tagname, $attary, $tagtype, $lt, $pos);
                 break;
             default:
@@ -1511,7 +1511,7 @@ function sq_getnxtag($body, $offset){
                         }
                         list($pos, $attval, $match) = $regary;
                         $pos++;
-                        $attary{$attname} = "'" . $attval . "'";
+                        $attary[$attname] = "'" . $attval . "'";
                     } else if ($quot == '"'){
                         $regary = sq_findnxreg($body, $pos+1, '\"');
                         if ($regary == false){
@@ -1519,7 +1519,7 @@ function sq_getnxtag($body, $offset){
                         }
                         list($pos, $attval, $match) = $regary;
                         $pos++;
-                        $attary{$attname} = '"' . $attval . '"';
+                        $attary[$attname] = '"' . $attval . '"';
                     } else {
                         /**
                          * These are hateful. Look for \s, or >.
@@ -1533,13 +1533,13 @@ function sq_getnxtag($body, $offset){
                          * If it's ">" it will be caught at the top.
                          */
                         $attval = preg_replace("/\"/s", "&quot;", $attval);
-                        $attary{$attname} = '"' . $attval . '"';
+                        $attary[$attname] = '"' . $attval . '"';
                     }
                 } else if (preg_match("|[\w/>]|", $char)) {
                     /**
                      * That was attribute type 4.
                      */
-                    $attary{$attname} = '"yes"';
+                    $attary[$attname] = '"yes"';
                 } else {
                     /**
                      * An illegal character. Find next '>' and return.
@@ -1576,7 +1576,7 @@ function sq_deent(&$attvalue, $regex, $hex=false){
             if ($hex){
                 $numval = hexdec($numval);
             }
-            $repl{$matches[0][$i]} = chr($numval);
+            $repl[$matches[0][$i]] = chr($numval);
         }
         $attvalue = strtr($attvalue, $repl);
         return true;
@@ -1616,7 +1616,7 @@ function sq_fixatts($tagname,
             if (preg_match($matchtag, $tagname)){
                 foreach ($matchattrs as $matchattr){
                     if (preg_match($matchattr, $attname)){
-                        unset($attary{$attname});
+                        unset($attary[$attname]);
                         continue;
                     }
                 }
@@ -1637,7 +1637,7 @@ function sq_fixatts($tagname,
             // entities are used in the attribute value. In 99% of the cases it's there as XSS
             // i.e.<div style="{ left:exp&#x0280;essio&#x0274;( alert('XSS') ) }">
             $attvalue = "idiocy";
-            $attary{$attname} = $attvalue;
+            $attary[$attname] = $attvalue;
         }
         sq_unspace($attvalue);
 
@@ -1660,7 +1660,7 @@ function sq_fixatts($tagname,
                         $newvalue =
                             preg_replace($valmatch, $valrepl, $attvalue);
                         if ($newvalue != $attvalue){
-                            $attary{$attname} = $newvalue;
+                            $attary[$attname] = $newvalue;
                             $attvalue = $newvalue;
                         }
                     }
@@ -1670,7 +1670,7 @@ function sq_fixatts($tagname,
         if ($attname == 'style') {
             if (preg_match('/[\0-\37\200-\377]+/',$attvalue)) {
                 // 8bit and control characters in style attribute values can be used for XSS, remove them
-                $attary{$attname} = '"disallowed character"';
+                $attary[$attname] = '"disallowed character"';
             }
             preg_match_all("/url\s*\((.+)\)/si",$attvalue,$aMatch);
             if (count($aMatch)) {
@@ -1678,7 +1678,7 @@ function sq_fixatts($tagname,
                     // url value
                     $urlvalue = $sMatch;
                     sq_fix_url($attname, $urlvalue, $message, $id, $mailbox,"'");
-                    $attary{$attname} = str_replace($sMatch,$urlvalue,$attvalue);
+                    $attary[$attname] = str_replace($sMatch,$urlvalue,$attvalue);
                 }
             }
         }
@@ -1689,7 +1689,7 @@ function sq_fixatts($tagname,
               || $attname == 'poster' || $attname == 'formaction'
               || $attname == 'background' || $attname == 'action') {
             sq_fix_url($attname, $attvalue, $message, $id, $mailbox);
-            $attary{$attname} = $attvalue;
+            $attary[$attname] = $attvalue;
         }
     }
     /**
@@ -1880,7 +1880,7 @@ function sq_fixstyle($body, $pos, $message, $id, $mailbox){
     $bSucces = false;
     $bEndTag = false;
     for ($i=$pos,$iCount=strlen($body);$i<$iCount;++$i) {
-        $char = $body{$i};
+        $char = $body[$i];
         switch ($char) {
             case '<':
                 $sToken = $char;
@@ -1911,7 +1911,7 @@ function sq_fixstyle($body, $pos, $message, $id, $mailbox){
             case '!':
                 if ($sToken == '<') {
                     // possible comment
-                    if (isset($body{$i+2}) && substr($body,$i,3) == '!--') {
+                    if (isset($body[$i+2]) && substr($body,$i,3) == '!--') {
                         $i = strpos($body,'-->',$i+3);
                         if ($i === false) { // no end comment
                             $i = strlen($body);
@@ -2112,7 +2112,7 @@ function sq_body2div($attary, $mailbox, $message, $id){
             }
         }
         if (strlen($styledef) > 0){
-            $divattary{"style"} = "\"$styledef\"";
+            $divattary["style"] = "\"$styledef\"";
         }
     }
     return $divattary;
@@ -2263,9 +2263,9 @@ function sq_sanitize($body,
                         if ($tagname == "body"){
                             $tagname = "div";
                         }
-                        if (isset($open_tags{$tagname}) &&
-                                $open_tags{$tagname} > 0){
-                            $open_tags{$tagname}--;
+                        if (isset($open_tags[$tagname]) &&
+                                $open_tags[$tagname] > 0){
+                            $open_tags[$tagname]--;
                         } else {
                             $tagname = false;
                         }
@@ -2307,10 +2307,10 @@ function sq_sanitize($body,
                                         $message, $id);
                             }
                             if ($tagtype == 1){
-                                if (isset($open_tags{$tagname})){
-                                    $open_tags{$tagname}++;
+                                if (isset($open_tags[$tagname])){
+                                    $open_tags[$tagname]++;
                                 } else {
-                                    $open_tags{$tagname}=1;
+                                    $open_tags[$tagname]=1;
                                 }
                             }
                             /**
